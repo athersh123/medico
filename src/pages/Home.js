@@ -14,6 +14,21 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
+
+// Mock symptoms database - moved outside component to prevent recreation on every render
+const symptomsDatabase = [
+  'fever', 'headache', 'cough', 'fatigue', 'nausea', 'dizziness',
+  'chest pain', 'shortness of breath', 'abdominal pain', 'back pain',
+  'joint pain', 'muscle weakness', 'loss of appetite', 'weight loss',
+  'insomnia', 'anxiety', 'depression', 'irritability', 'mood swings',
+  'memory problems', 'concentration issues', 'tremors', 'seizures',
+  'vision problems', 'hearing loss', 'skin rash', 'itching',
+  'swelling', 'bruising', 'bleeding', 'constipation', 'diarrhea',
+  'vomiting', 'heartburn', 'acid reflux', 'bloating', 'gas',
+  // Added explicit symptom options users asked for
+  'stomach pain', 'leg pain', 'hand pain', 'eye pain'
+];
+
 const Home = () => {
   const { user } = useAuth();
   const [symptoms, setSymptoms] = useState('');
@@ -21,18 +36,46 @@ const Home = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [suggestedSymptoms, setSuggestedSymptoms] = useState([]);
+  const [isReady, setIsReady] = useState(false);
 
-  // Mock symptoms database
-  const symptomsDatabase = [
-    'fever', 'headache', 'cough', 'fatigue', 'nausea', 'dizziness',
-    'chest pain', 'shortness of breath', 'abdominal pain', 'back pain',
-    'joint pain', 'muscle weakness', 'loss of appetite', 'weight loss',
-    'insomnia', 'anxiety', 'depression', 'irritability', 'mood swings',
-    'memory problems', 'concentration issues', 'tremors', 'seizures',
-    'vision problems', 'hearing loss', 'skin rash', 'itching',
-    'swelling', 'bruising', 'bleeding', 'constipation', 'diarrhea',
-    'vomiting', 'heartburn', 'acid reflux', 'bloating', 'gas'
-  ];
+  console.log('Home component: rendering with user =', user);
+
+  useEffect(() => {
+    console.log('Home component: mounted');
+    // Simulate component initialization
+    const timer = setTimeout(() => {
+      setIsReady(true);
+      console.log('Home component: ready');
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Filter symptoms based on input
+    if (symptoms) {
+      const filtered = symptomsDatabase.filter(symptom =>
+        symptom.toLowerCase().includes(symptoms.toLowerCase())
+      ).slice(0, 5);
+      setSuggestedSymptoms(filtered);
+    } else {
+      setSuggestedSymptoms([]);
+    }
+  }, [symptoms, symptomsDatabase]);
+
+  if (!isReady) {
+    console.log('Home component: showing loading state');
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Loading Home Page...</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('Home component: rendering main content');
 
   // Comprehensive disease predictions with symptom-specific analysis
   const diseasePredictions = {
@@ -1222,18 +1265,6 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    // Filter symptoms based on input
-    if (symptoms) {
-      const filtered = symptomsDatabase.filter(symptom =>
-        symptom.toLowerCase().includes(symptoms.toLowerCase())
-      ).slice(0, 5);
-      setSuggestedSymptoms(filtered);
-    } else {
-      setSuggestedSymptoms([]);
-    }
-  }, [symptoms]);
-
   const handleSymptomSelect = (symptom) => {
     if (symptoms) {
       setSymptoms(symptoms + ', ' + symptom);
@@ -1404,7 +1435,7 @@ const Home = () => {
       ],
       'joint pain': [
         // English
-        'joint pain', 'pain in joints', 'knee pain', 'hip pain', 'shoulder pain',
+        'joint pain', 'pain in joints', 'knee pain', 'hip pain', 'shoulder pain', 'hand pain', 'leg pain',
         // Tamil
         'மூட்டு வலி', 'மூட்டு வலி உள்ளது', 'மூட்டு வலி வருகிறது', 'மூட்டு வலி இருக்கிறது',
         'மூட்டு வலி வந்திருக்கிறது', 'மூட்டு வலி வருகிறது', 'மூட்டு வலி உள்ளது'
@@ -1495,7 +1526,7 @@ const Home = () => {
       ],
       'vision problems': [
         // English
-        'vision problems', 'blurry vision', 'can\'t see well', 'eye problems',
+        'vision problems', 'blurry vision', 'can\'t see well', 'eye problems', 'eye pain', 'eye hurts',
         // Tamil
         'பார்வை பிரச்சினை', 'பார்வை பிரச்சினை உள்ளது', 'பார்வை பிரச்சினை வருகிறது', 'பார்வை பிரச்சினை இருக்கிறது',
         'பார்வை பிரச்சினை வந்திருக்கிறது', 'பார்வை பிரச்சினை வருகிறது', 'பார்வை பிரச்சினை உள்ளது'
@@ -1639,20 +1670,27 @@ const Home = () => {
 
     // Parse symptoms and find matches
     const symptomList = symptoms.toLowerCase().split(',').map(s => s.trim());
+    const aliasMap = {
+      'stomach pain': 'abdominal pain',
+      'eye pain': 'vision problems',
+      'leg pain': 'joint pain',
+      'hand pain': 'joint pain'
+    };
+    const normalizedSymptoms = symptomList.map(s => aliasMap[s] || s);
     
     // Enhanced analysis for multiple symptoms
-    if (symptomList.length > 1) {
+    if (normalizedSymptoms.length > 1) {
       // Check for specific symptom combinations
-      const hasFever = symptomList.includes('fever');
-      const hasCough = symptomList.includes('cough');
-      const hasFatigue = symptomList.includes('fatigue');
-      const hasChestPain = symptomList.includes('chest pain');
-      const hasShortnessOfBreath = symptomList.includes('shortness of breath');
-      const hasNausea = symptomList.includes('nausea');
-      const hasVomiting = symptomList.includes('vomiting');
-      const hasDiarrhea = symptomList.includes('diarrhea');
-      const hasHeadache = symptomList.includes('headache');
-      const hasDizziness = symptomList.includes('dizziness');
+      const hasFever = normalizedSymptoms.includes('fever');
+      const hasCough = normalizedSymptoms.includes('cough');
+      const hasFatigue = normalizedSymptoms.includes('fatigue');
+      const hasChestPain = normalizedSymptoms.includes('chest pain');
+      const hasShortnessOfBreath = normalizedSymptoms.includes('shortness of breath');
+      const hasNausea = normalizedSymptoms.includes('nausea');
+      const hasVomiting = normalizedSymptoms.includes('vomiting');
+      const hasDiarrhea = normalizedSymptoms.includes('diarrhea');
+      const hasHeadache = normalizedSymptoms.includes('headache');
+      const hasDizziness = normalizedSymptoms.includes('dizziness');
 
       // Complex symptom combinations
       if (hasFever && hasCough && hasFatigue) {
@@ -1808,11 +1846,11 @@ const Home = () => {
       }
 
       // For other combinations, use the most specific symptom
-      const availableSymptoms = symptomList.filter(symptom => diseasePredictions[symptom]);
-      const primarySymptom = availableSymptoms[0] || symptomList[0];
+      const availableSymptoms = normalizedSymptoms.filter(symptom => diseasePredictions[symptom]);
+      const primarySymptom = availableSymptoms[0] || normalizedSymptoms[0];
       const prediction = diseasePredictions[primarySymptom] || {
         disease: 'Multiple Symptom Assessment',
-        description: `Based on your symptoms (${symptomList.join(', ')}), we recommend consulting with a healthcare professional for a comprehensive evaluation.`,
+        description: `Based on your symptoms (${normalizedSymptoms.join(', ')}), we recommend consulting with a healthcare professional for a comprehensive evaluation.`,
         precautions: [
           'Monitor all symptoms closely',
           'Keep a detailed symptom diary',
@@ -1849,7 +1887,7 @@ const Home = () => {
     }
 
     // Single symptom analysis
-    const primarySymptom = symptomList[0];
+    const primarySymptom = normalizedSymptoms[0];
     const prediction = diseasePredictions[primarySymptom] || {
       disease: 'General Health Assessment',
       description: 'Based on your symptoms, we recommend consulting with a healthcare professional for a comprehensive evaluation.',
@@ -1888,21 +1926,176 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen gradient-bg py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{backgroundColor: '#f8f9fa', minHeight: '100vh'}}>
+      {/* Enhanced Medical Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '4s'}}></div>
+        {/* Medical-themed background pattern */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="medical" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23ffffff" opacity="0.3"/><rect x="8" y="8" width="4" height="4" fill="%23ffffff" opacity="0.2"/></pattern></defs><rect width="100" height="100" fill="url(%23medical)"/></svg>')`
+        }}></div>
+        
+        {/* Medical-themed floating elements */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-pink-400 to-red-500 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float" style={{animationDelay: '4s'}}></div>
+        
+        {/* Medical cross patterns */}
+        <div className="absolute top-20 right-20 w-40 h-40 opacity-15">
+          <div className="w-full h-2 bg-gradient-to-r from-blue-400 to-purple-500 transform rotate-45 rounded-full shadow-lg"></div>
+          <div className="w-full h-2 bg-gradient-to-r from-purple-400 to-pink-500 transform -rotate-45 rounded-full shadow-lg"></div>
+        </div>
+        <div className="absolute bottom-20 left-20 w-32 h-32 opacity-15">
+          <div className="w-full h-2 bg-gradient-to-r from-green-400 to-blue-500 transform rotate-45 rounded-full shadow-lg"></div>
+          <div className="w-full h-2 bg-gradient-to-r from-blue-400 to-cyan-500 transform -rotate-45 rounded-full shadow-lg"></div>
+        </div>
+        
+        {/* DNA helix pattern */}
+        <div className="absolute top-1/2 left-10 w-20 h-40 opacity-25">
+          <div className="w-2 h-10 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full mx-1 animate-pulse shadow-md"></div>
+          <div className="w-2 h-10 bg-gradient-to-b from-purple-400 to-pink-500 rounded-full mx-1 animate-pulse shadow-md" style={{animationDelay: '0.5s'}}></div>
+          <div className="w-2 h-10 bg-gradient-to-b from-green-400 to-blue-500 rounded-full mx-1 animate-pulse shadow-md" style={{animationDelay: '1s'}}></div>
+          <div className="w-2 h-10 bg-gradient-to-b from-pink-400 to-red-500 rounded-full mx-1 animate-pulse shadow-md" style={{animationDelay: '1.5s'}}></div>
+        </div>
+        
+        {/* Heartbeat pattern */}
+        <div className="absolute top-1/3 right-10 w-24 h-20 opacity-35">
+          <div className="w-3 h-5 bg-gradient-to-b from-red-400 to-red-500 rounded-full mx-1 animate-pulse shadow-md"></div>
+          <div className="w-3 h-8 bg-gradient-to-b from-red-500 to-red-600 rounded-full mx-1 animate-pulse shadow-md" style={{animationDelay: '0.3s'}}></div>
+          <div className="w-3 h-4 bg-gradient-to-b from-red-400 to-red-500 rounded-full mx-1 animate-pulse shadow-md" style={{animationDelay: '0.6s'}}></div>
+          <div className="w-3 h-7 bg-gradient-to-b from-red-500 to-red-600 rounded-full mx-1 animate-pulse shadow-md" style={{animationDelay: '0.9s'}}></div>
+        </div>
+        
+        {/* Medical equipment icons */}
+        <div className="absolute bottom-1/3 right-1/4 w-20 h-20 opacity-25">
+          <div className="w-10 h-10 border-3 border-white rounded-full mx-auto shadow-lg"></div>
+          <div className="w-5 h-5 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mx-auto mt-2 shadow-md"></div>
+        </div>
+        
+        {/* Stethoscope pattern */}
+        <div className="absolute top-1/4 left-1/4 w-24 h-20 opacity-20">
+          <div className="w-20 h-2 bg-gradient-to-r from-white to-blue-200 rounded-full transform rotate-45 shadow-lg"></div>
+          <div className="w-10 h-10 border-3 border-white rounded-full mx-auto mt-2 shadow-lg"></div>
+        </div>
+        
+        {/* Professional medical grid pattern */}
+        <div className="absolute inset-0 opacity-8">
+          <div className="w-full h-full" style={{
+            backgroundImage: `
+              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px'
+          }}></div>
+        </div>
+        
+        {/* Floating medical symbols */}
+        <div className="absolute top-1/6 right-1/6 w-12 h-12 opacity-20 animate-float">
+          <div className="w-full h-full border-2 border-white rounded-full flex items-center justify-center">
+            <div className="w-1 h-6 bg-white transform rotate-45"></div>
+            <div className="w-1 h-6 bg-white transform -rotate-45"></div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-1/6 left-1/6 w-10 h-10 opacity-25 animate-float" style={{animationDelay: '3s'}}>
+          <div className="w-full h-full border-2 border-white rounded-full flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
+        </div>
+        
+        {/* Pulse wave pattern */}
+        <div className="absolute top-1/2 right-1/3 w-24 h-16 opacity-20">
+          <div className="flex items-end space-x-1 h-full">
+            <div className="w-1 h-3 bg-white rounded-full animate-pulse"></div>
+            <div className="w-1 h-6 bg-white rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+            <div className="w-1 h-4 bg-white rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+            <div className="w-1 h-8 bg-white rounded-full animate-pulse" style={{animationDelay: '0.6s'}}></div>
+            <div className="w-1 h-5 bg-white rounded-full animate-pulse" style={{animationDelay: '0.8s'}}></div>
+          </div>
+        </div>
+        
+        {/* Additional floating medical elements */}
+        <div className="absolute top-1/5 left-1/3 w-16 h-16 opacity-15 animate-float" style={{animationDelay: '5s'}}>
+          <div className="w-full h-full border-2 border-white rounded-full flex items-center justify-center">
+            <div className="w-1 h-8 bg-white transform rotate-45"></div>
+            <div className="w-1 h-8 bg-white transform -rotate-45"></div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-1/5 right-1/5 w-12 h-12 opacity-20 animate-float" style={{animationDelay: '6s'}}>
+          <div className="w-full h-full border-2 border-white rounded-full flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
+        </div>
+        
+        {/* Medical cross in corner */}
+        <div className="absolute top-10 right-10 w-20 h-20 opacity-10">
+          <div className="w-full h-1 bg-white transform rotate-45 absolute top-1/2"></div>
+          <div className="w-full h-1 bg-white transform -rotate-45 absolute top-1/2"></div>
+        </div>
+        
+        {/* Floating pills */}
+        <div className="absolute top-1/3 left-1/6 w-8 h-8 opacity-25 animate-float" style={{animationDelay: '7s'}}>
+          <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+            <div className="w-4 h-1 bg-blue-400 rounded-full"></div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-1/3 right-1/6 w-6 h-6 opacity-30 animate-float" style={{animationDelay: '8s'}}>
+          <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+            <div className="w-3 h-1 bg-green-400 rounded-full"></div>
+          </div>
+        </div>
+        
+        {/* Additional medical plus symbols */}
+        <div className="absolute top-1/4 right-1/3 w-12 h-12 opacity-20 animate-float" style={{animationDelay: '9s'}}>
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-1 h-8 bg-gradient-to-b from-white to-blue-200 rounded-full shadow-md"></div>
+            <div className="w-8 h-1 bg-gradient-to-r from-white to-purple-200 rounded-full shadow-md absolute"></div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-1/4 left-1/3 w-14 h-14 opacity-25 animate-float" style={{animationDelay: '10s'}}>
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-1 h-10 bg-gradient-to-b from-white to-green-200 rounded-full shadow-md"></div>
+            <div className="w-10 h-1 bg-gradient-to-r from-white to-cyan-200 rounded-full shadow-md absolute"></div>
+          </div>
+        </div>
+        
+        {/* Medical thermometer representation */}
+        <div className="absolute top-1/6 left-1/4 w-8 h-16 opacity-20 animate-float" style={{animationDelay: '11s'}}>
+          <div className="w-full h-full flex flex-col items-center">
+            <div className="w-6 h-12 border-2 border-white rounded-full relative">
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-6 bg-gradient-to-t from-red-400 to-red-500 rounded-full"></div>
+            </div>
+            <div className="w-2 h-2 bg-white rounded-full mt-1"></div>
+          </div>
+        </div>
+        
+        {/* Medical syringe representation */}
+        <div className="absolute bottom-1/6 right-1/4 w-12 h-8 opacity-20 animate-float" style={{animationDelay: '12s'}}>
+          <div className="w-full h-full flex items-center">
+            <div className="w-8 h-2 bg-white rounded-full"></div>
+            <div className="w-4 h-1 bg-white rounded-full ml-1"></div>
+            <div className="w-2 h-2 bg-white rounded-full ml-1"></div>
+          </div>
+        </div>
       </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Welcome Section */}
+        {/* Enhanced Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
+          {/* Medical-themed decorative elements around the title */}
+          <div className="relative mb-8">
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-60 animate-pulse"></div>
+            <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-pink-400 to-red-500 rounded-full opacity-60 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full opacity-60 animate-pulse" style={{animationDelay: '1s'}}></div>
+            <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-60 animate-pulse" style={{animationDelay: '1.5s'}}></div>
+          </div>
+          
           <motion.div 
             className="flex items-center justify-center mb-6"
             whileHover={{ scale: 1.05 }}
@@ -1914,9 +2107,22 @@ const Home = () => {
             </div>
             <h1 className="text-5xl font-semibold text-gradient">Health Care Center</h1>
           </motion.div>
+          
+          {/* Medical icons row */}
+          <div className="flex justify-center items-center space-x-6 mb-4 opacity-60">
+            <FaBrain className="text-2xl text-blue-500 animate-bounce" style={{animationDelay: '0.2s'}} />
+            <FaShieldAlt className="text-2xl text-green-500 animate-bounce" style={{animationDelay: '0.4s'}} />
+            <FaPills className="text-2xl text-purple-500 animate-bounce" style={{animationDelay: '0.6s'}} />
+            <FaDumbbell className="text-2xl text-orange-500 animate-bounce" style={{animationDelay: '0.8s'}} />
+            <FaAppleAlt className="text-2xl text-red-500 animate-bounce" style={{animationDelay: '1s'}} />
+          </div>
+          
           <p className="text-xl text-gray-700 max-w-2xl mx-auto font-normal">
             Welcome back, <span className="text-gradient font-medium">{user?.name}</span>! Our AI system is here to help you understand your symptoms and provide personalized health recommendations.
           </p>
+          
+          {/* Decorative line */}
+          <div className="w-32 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent mx-auto mt-6"></div>
         </motion.div>
 
         {/* Symptom Input Section */}

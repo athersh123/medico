@@ -58,23 +58,30 @@ const SignUp = () => {
 
     setLoading(true);
     setError('');
+    console.log('SignUp: Starting signup process with data:', formData);
 
     try {
-      // Simulate API call to database
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       // Call the signup function from AuthContext
-      await signup(formData.name, formData.email, formData.password);
+      const result = await signup({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
       
-      setSuccess('Account created successfully! Redirecting...');
+      console.log('SignUp: Signup result:', result);
       
-      // Redirect to home page after 2 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      if (result.success) {
+        setSuccess('Account created successfully! Redirecting...');
+        
+        // Redirect to home page after 2 seconds
+        setTimeout(() => {
+          navigate('/home');
+        }, 2000);
+      }
       
     } catch (err) {
-      setError('Failed to create account. Please try again.');
+      console.error('SignUp: Signup error:', err);
+      setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }

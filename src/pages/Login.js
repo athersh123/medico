@@ -29,19 +29,12 @@ const Login = () => {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, accept any email/password
-      const userData = {
-        name: formData.email.split('@')[0],
-        email: formData.email
-      };
-      
-      login(userData);
-      navigate('/home');
+      const result = await login(formData);
+      if (result.success) {
+        navigate('/home');
+      }
     } catch (err) {
-      setError('Invalid email or password');
+      setError(err.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -50,16 +43,8 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      // Simulate Google sign-in
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const userData = {
-        name: 'Google User',
-        email: 'user@gmail.com'
-      };
-      
-      login(userData);
-      navigate('/home');
+      // For now, show a message that Google sign-in will be implemented
+      setError('Google sign-in will be implemented soon!');
     } catch (err) {
       setError('Google sign-in failed');
     } finally {

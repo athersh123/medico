@@ -23,9 +23,27 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('medicor_user', JSON.stringify(userData));
+
+  // Store users in localStorage as an array
+  const getUsers = () => {
+    const users = localStorage.getItem('medicor_users');
+    return users ? JSON.parse(users) : [];
+  };
+
+  const saveUsers = (users) => {
+    localStorage.setItem('medicor_users', JSON.stringify(users));
+  };
+
+  const login = async ({ email, password }) => {
+    const users = getUsers();
+    const foundUser = users.find(u => u.email === email && u.password === password);
+    if (foundUser) {
+      setUser(foundUser);
+      localStorage.setItem('medicor_user', JSON.stringify(foundUser));
+      return { success: true, user: foundUser };
+    } else {
+      return { success: false, message: 'Invalid email or password' };
+    }
   };
 
   const logout = () => {
@@ -33,9 +51,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('medicor_user');
   };
 
-  const signup = (userData) => {
-    setUser(userData);
-    localStorage.setItem('medicor_user', JSON.stringify(userData));
+  const signup = async ({ name, email, password }) => {
+    let users = getUsers();
+    if (users.find(u => u.email === email)) {
+      return { success: false, message: 'Email already exists' };
+    }
+    const newUser = { name, email, password };
+    users.push(newUser);
+    saveUsers(users);
+    setUser(newUser);
+    localStorage.setItem('medicor_user', JSON.stringify(newUser));
+    return { success: true, user: newUser };
   };
 
   const value = {
