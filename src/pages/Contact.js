@@ -9,6 +9,8 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [isSending, setIsSending] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -17,21 +19,51 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate form submission
-    console.log('Form submitted:', formData);
-    alert('Thank you for your message! We will get back to you soon.');
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    setIsSending(true);
+    setStatusMessage('');
+
+    try {
+      // Send to your backend server
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('Email sent successfully!');
+        setStatusMessage('✅ Message sent successfully! We will get back to you soon.');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setStatusMessage(''), 5000);
+      } else {
+        throw new Error(data.message || 'Failed to send email');
+      }
+
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      setStatusMessage('❌ Failed to send message. Please try again or email us directly at athersh124@gmail.com');
+      
+      // Clear error message after 7 seconds
+      setTimeout(() => setStatusMessage(''), 7000);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
     <div className="min-h-screen gradient-bg relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-300 rounded-full animate-float opacity-30"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 bg-blue-300 rounded-full animate-float opacity-40" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-pink-300 rounded-full animate-float opacity-30" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-200 rounded-full animate-float opacity-30"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-blue-200 rounded-full animate-float opacity-40" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-40 right-1/3 w-12 h-12 bg-green-300 rounded-full animate-float opacity-40" style={{ animationDelay: '0.5s' }}></div>
       </div>
 
@@ -68,7 +100,7 @@ const Contact = () => {
             <div className="card p-8 shadow-glow">
               <h2 className="text-2xl font-bold text-gradient mb-6 flex items-center">
                 <FaUser className="mr-3 text-2xl" />
-                Get In Touch
+                Healthcare
               </h2>
               <p className="text-gray-700 font-medium mb-8">
                 We're here to help! Reach out to us for any questions about our AI-powered healthcare platform, 
@@ -85,7 +117,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 mb-1">Email</h3>
-                    <p className="text-gray-700 font-medium">support@medicorai.com</p>
+                    <p className="text-gray-700 font-medium">athersh124@gmail.com</p>
                     <p className="text-gray-600 text-sm">We'll respond within 24 hours</p>
                   </div>
                 </motion.div>
@@ -99,8 +131,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 mb-1">Phone</h3>
-                    <p className="text-gray-700 font-medium">+1 (555) 123-4567</p>
-                    <p className="text-gray-600 text-sm">Monday - Friday, 9 AM - 6 PM EST</p>
+                    <p className="text-gray-700 font-medium">+91-7904852910</p>
+                    <p className="text-gray-600 text-sm">Monday - Satursday,9 AM - 6 PM EST</p>
                   </div>
                 </motion.div>
 
@@ -114,7 +146,7 @@ const Contact = () => {
                   <div>
                     <h3 className="text-lg font-bold text-gray-800 mb-1">Address</h3>
                     <p className="text-gray-700 font-medium">123 Healthcare Ave, Tech City</p>
-                    <p className="text-gray-600 text-sm">Innovation District, TC 12345</p>
+                    <p className="text-gray-600 text-sm">coimbatore,cb-12345</p>
                   </div>
                 </motion.div>
 
@@ -151,6 +183,21 @@ const Contact = () => {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Status Message */}
+              {statusMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-4 rounded-lg ${
+                    statusMessage.includes('✅') 
+                      ? 'bg-green-100 border-2 border-green-500 text-green-800' 
+                      : 'bg-red-100 border-2 border-red-500 text-red-800'
+                  }`}
+                >
+                  <p className="font-semibold">{statusMessage}</p>
+                </motion.div>
+              )}
+
               <div>
                 <label htmlFor="name" className="block text-gray-800 font-semibold mb-2">
                   Full Name
@@ -162,6 +209,7 @@ const Contact = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
+                  disabled={isSending}
                   className="input-field"
                   placeholder="Enter your full name"
                 />
@@ -178,6 +226,7 @@ const Contact = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  disabled={isSending}
                   className="input-field"
                   placeholder="Enter your email address"
                 />
@@ -194,6 +243,7 @@ const Contact = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   required
+                  disabled={isSending}
                   className="input-field"
                   placeholder="What is this about?"
                 />
@@ -209,6 +259,7 @@ const Contact = () => {
                   value={formData.message}
                   onChange={handleChange}
                   required
+                  disabled={isSending}
                   rows="5"
                   className="input-field resize-none"
                   placeholder="Tell us more about your inquiry..."
@@ -217,12 +268,24 @@ const Contact = () => {
 
               <motion.button
                 type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="btn-primary w-full flex items-center justify-center"
+                disabled={isSending}
+                whileHover={{ scale: isSending ? 1 : 1.05 }}
+                whileTap={{ scale: isSending ? 1 : 0.95 }}
+                className={`btn-primary w-full flex items-center justify-center ${
+                  isSending ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                <FaPaperPlane className="mr-2" />
-                Send Message
+                {isSending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <FaPaperPlane className="mr-2" />
+                    Send Message
+                  </>
+                )}
               </motion.button>
             </form>
           </motion.div>
@@ -249,7 +312,7 @@ const Contact = () => {
               <div className="border-l-4 border-green-500 pl-4">
                 <h3 className="text-lg font-bold text-gray-800 mb-2">Is my health data secure?</h3>
                 <p className="text-gray-700 font-medium">
-                  Yes, we use enterprise-grade encryption and follow HIPAA guidelines to ensure your data remains completely secure.
+                  Yes, we use enterprise-grade encryption and follow guidelines to ensure your data remains completely secure.
                 </p>
               </div>
             </div>

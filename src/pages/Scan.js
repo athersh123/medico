@@ -14,12 +14,17 @@ import {
   FaExclamationTriangle,
   FaInfoCircle
 } from 'react-icons/fa';
+import { reportAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Scan = () => {
+  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState('');
+  const [reportId, setReportId] = useState(null);
 
   const handleFileSelect = (file) => {
     if (file && (file.type === 'application/pdf' || file.type.startsWith('image/'))) {
@@ -49,74 +54,150 @@ const Scan = () => {
   };
 
   const analyzeReport = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !user) {
+      setError('Please log in and select a file to analyze.');
+      return;
+    }
 
     setIsAnalyzing(true);
     setAnalysisResult(null);
+    setError('');
 
-    // Simulate AI analysis
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      console.log('Scan: Starting analysis for file:', selectedFile.name);
+      console.log('Scan: User authenticated:', !!user);
+      console.log('Scan: Token exists:', !!localStorage.getItem('medicor_token'));
+      
+      // Prepare file data for API
+      const fileData = {
+        fileName: selectedFile.name,
+        fileSize: `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`,
+        fileType: selectedFile.type,
+        fileData: selectedFile.name // In real implementation, this would be base64 or file upload
+      };
 
-    // Mock analysis results
-    const mockResults = {
-      fileName: selectedFile.name,
-      fileSize: `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`,
-      analysisDate: new Date().toLocaleDateString(),
-      confidence: 94.5,
-      findings: [
-        {
-          type: 'Normal',
-          description: 'Heart size and position appear normal',
-          confidence: 98.2,
-          icon: <FaCheckCircle className="text-green-500" />
-        },
-        {
-          type: 'Attention Required',
-          description: 'Mild cardiomegaly detected in left ventricle',
-          confidence: 87.3,
-          icon: <FaExclamationTriangle className="text-yellow-500" />
-        },
-        {
-          type: 'Normal',
-          description: 'Lung fields are clear without evidence of pathology',
-          confidence: 96.1,
-          icon: <FaCheckCircle className="text-green-500" />
-        }
-      ],
-      recommendations: [
-        'Follow up with cardiologist within 2 weeks',
-        'Monitor blood pressure regularly',
-        'Consider lifestyle modifications',
-        'Schedule repeat imaging in 6 months'
-      ],
-      riskFactors: [
-        'Age-related cardiovascular changes',
-        'Family history of heart disease',
-        'Previous hypertension diagnosis'
-      ],
-      medications: [
-        'Consult with physician for potential medication adjustments',
-        'Consider ACE inhibitors if not contraindicated',
-        'Monitor for any new symptoms'
-      ]
-    };
+      console.log('Scan: Sending analysis request with data:', fileData);
 
-    setAnalysisResult(mockResults);
-    setIsAnalyzing(false);
+      // Call the API to analyze the report
+      const response = await reportAPI.analyzeReport(fileData);
+      
+      console.log('Scan: Analysis response received:', response);
+      
+      if (response.success) {
+        const analysis = response.analysis;
+        
+        // Add icons to findings
+        const findingsWithIcons = analysis.findings.map(finding => ({
+          ...finding,
+          icon: finding.findingType === 'Normal' 
+            ? <FaCheckCircle className="text-green-500" />
+            : <FaExclamationTriangle className="text-yellow-500" />
+        }));
+
+        setAnalysisResult({
+          ...analysis,
+          findings: findingsWithIcons
+        });
+        setReportId(response.reportId);
+        console.log('Scan: Analysis completed successfully');
+      } else {
+        console.error('Scan: Analysis failed - no success flag');
+        setError(response.message || 'Failed to analyze report. Please try again.');
+      }
+    } catch (error) {
+      console.error('Scan: Analysis error:', error);
+      console.error('Scan: Error response:', error.response);
+      
+      // Better error handling
+      let errorMessage = 'Failed to analyze report. Please try again.';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Please log in to analyze reports.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You do not have permission to analyze reports.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const removeFile = () => {
     setSelectedFile(null);
     setAnalysisResult(null);
+    setError('');
+    setReportId(null);
+  };
+
+  const downloadReport = async () => {
+    if (!reportId) return;
+
+    try {
+      const response = await reportAPI.downloadReport(reportId);
+      
+      if (response.success) {
+        // Create a downloadable report
+        const reportData = response.report;
+        const reportContent = `
+MEDICAL REPORT ANALYSIS
+======================
+
+File: ${reportData.fileName}
+Analysis Date: ${reportData.analysisDate}
+Confidence: ${reportData.confidence}%
+
+FINDINGS:
+${reportData.findings.map((finding, index) => 
+  `${index + 1}. ${finding.findingType} (${finding.confidence}%)
+     ${finding.description}`
+).join('\n\n')}
+
+RECOMMENDATIONS:
+${reportData.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
+
+RISK FACTORS:
+${reportData.riskFactors.map((risk, index) => `${index + 1}. ${risk}`).join('\n')}
+
+MEDICATION CONSIDERATIONS:
+${reportData.medications.map((med, index) => `${index + 1}. ${med}`).join('\n')}
+
+---
+Generated by Medicor AI
+        `;
+
+        // Create and download file
+        const blob = new Blob([reportContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `medical_report_analysis_${reportData.fileName.replace(/\.[^/.]+$/, "")}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      setError('Failed to download report. Please try again.');
+    }
+  };
+
+  const viewFullAnalysis = () => {
+    // In a real application, this would open a detailed modal or navigate to a full analysis page
+    alert('Full analysis view would show detailed breakdowns, charts, and additional insights. This feature will be implemented in the next version.');
   };
 
   return (
     <div className="min-h-screen gradient-bg py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float" style={{animationDelay: '2s'}}></div>
       </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
@@ -133,7 +214,7 @@ const Scan = () => {
           >
             <div className="relative">
               <FaFileMedical className="text-6xl text-gradient mr-4 animate-pulse-slow" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-30 animate-glow"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-lg opacity-30 animate-glow"></div>
             </div>
             <h1 className="text-5xl font-bold text-gradient">Medical Report Analysis</h1>
           </motion.div>
@@ -237,6 +318,23 @@ const Scan = () => {
           </div>
         </motion.div>
 
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto mb-8"
+          >
+            <div className="bg-red-50 border-2 border-red-500 text-red-700 px-6 py-4 rounded-xl flex items-start">
+              <FaExclamationTriangle className="text-2xl mr-3 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-bold text-lg mb-1">Analysis Error</h3>
+                <p>{error}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Analysis Results */}
         {analysisResult && (
           <motion.div
@@ -298,7 +396,7 @@ const Scan = () => {
                     <div key={index} className="border-l-4 border-gray-200 pl-4">
                       <div className="flex items-center mb-2">
                         {finding.icon}
-                        <span className="ml-2 font-semibold text-gray-900">{finding.type}</span>
+                        <span className="ml-2 font-semibold text-gray-900">{finding.findingType}</span>
                         <span className="ml-auto text-sm text-gray-500">{finding.confidence}%</span>
                       </div>
                       <p className="text-gray-600 text-sm">{finding.description}</p>
@@ -373,11 +471,17 @@ const Scan = () => {
               transition={{ delay: 0.4 }}
               className="flex justify-center space-x-4 mt-8"
             >
-              <button className="btn-primary flex items-center">
+              <button 
+                onClick={downloadReport}
+                className="btn-primary flex items-center"
+              >
                 <FaDownload className="mr-2" />
                 Download Report
               </button>
-              <button className="btn-secondary flex items-center">
+              <button 
+                onClick={viewFullAnalysis}
+                className="btn-secondary flex items-center"
+              >
                 <FaEye className="mr-2" />
                 View Full Analysis
               </button>

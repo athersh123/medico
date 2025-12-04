@@ -5,50 +5,50 @@ import { FaHeartbeat, FaCode, FaDatabase, FaBrain, FaMobile, FaCloud, FaShieldAl
 const Developer = () => {
   const teamMembers = [
     {
-      name: 'Dr. Sarah Johnson',
+      name: 'Dr. Olivya mary',
       role: 'Chief Medical Officer',
-      expertise: 'Internal Medicine, AI Healthcare',
-      experience: '15+ years',
+      expertise: 'Internal Medicine',
+      experience: '5+ years',
       avatar: '👩‍⚕️',
       color: 'from-blue-500 to-purple-500'
     },
     {
-      name: 'Dr. Michael Chen',
+      name: 'Dr. Amruth',
       role: 'AI Research Lead',
-      expertise: 'Machine Learning, Medical AI',
-      experience: '10+ years',
+      expertise: 'Medical AI',
+      experience: '3+ years',
       avatar: '👨‍💻',
       color: 'from-green-500 to-teal-500'
     },
     {
-      name: 'Dr. Emily Rodriguez',
+      name: 'Dr.Ashwin Kumar',
       role: 'Clinical Research Director',
       expertise: 'Clinical Trials, Evidence-Based Medicine',
-      experience: '12+ years',
+      experience: '2+ years',
       avatar: '👩‍🔬',
       color: 'from-purple-500 to-pink-500'
     },
     {
-      name: 'Alex Thompson',
+      name: 'Dr.Aadhi',
       role: 'Full Stack Developer',
       expertise: 'React, Node.js, Healthcare APIs',
-      experience: '8+ years',
+      experience: '6+ years',
       avatar: '👨‍💼',
       color: 'from-orange-500 to-red-500'
     },
     {
-      name: 'Lisa Wang',
+      name: 'Dr.Aswin',
       role: 'UX/UI Designer',
       expertise: 'Healthcare UX, Accessibility',
-      experience: '6+ years',
+      experience: '4+ years',
       avatar: '👩‍🎨',
       color: 'from-pink-500 to-rose-500'
     },
     {
-      name: 'David Kim',
+      name: 'Dr. Athersh',
       role: 'Data Scientist',
       expertise: 'Medical Data Analysis, ML Models',
-      experience: '9+ years',
+      experience: '3+ years',
       avatar: '👨‍🔬',
       color: 'from-indigo-500 to-blue-500'
     }
@@ -101,13 +101,13 @@ const Developer = () => {
       color: 'from-yellow-400 to-orange-500'
     },
     {
-      title: '500+ Diseases',
+      title: '100+ Diseases',
       description: 'Comprehensive disease coverage',
       icon: <FaUsers className="text-2xl" />,
       color: 'from-blue-400 to-purple-500'
     },
     {
-      title: '10K+ Users',
+      title: '5K+ Users',
       description: 'Active platform users',
       icon: <FaRocket className="text-2xl" />,
       color: 'from-green-400 to-teal-500'
@@ -119,7 +119,6 @@ const Developer = () => {
       color: 'from-pink-400 to-rose-500'
     }
   ];
-
   return (
     <div className="min-h-screen gradient-bg relative overflow-hidden">
       {/* Animated background elements */}

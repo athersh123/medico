@@ -1287,28 +1287,48 @@ const Home = () => {
     const recognition = new SpeechRecognition();
     
     recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'ta-IN'; // Tamil language
-    recognition.maxAlternatives = 1;
+    recognition.interimResults = true; // Enable interim results for better feedback
+    recognition.lang = 'en-US'; // English language (change to 'ta-IN' for Tamil)
+    recognition.maxAlternatives = 3; // Increased for better accuracy
     
     recognition.onstart = () => {
       console.log('Speech recognition started');
+      console.log('Language:', recognition.lang);
+      console.log('Please speak clearly into your microphone...');
       // Show user feedback
-      alert('🎤 தயவுசெய்து உங்கள் அறிகுறிகளை பேசுங்கள். தெளிவாகவும் மெதுவாகவும் பேசுங்கள்.');
+      alert('🎤 Listening... Please speak your symptoms clearly and slowly.\n\nExample: "I have fever and headache"');
     };
     
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
-      console.log('Recognized text:', transcript);
+      let finalTranscript = '';
+      let interimTranscript = '';
       
-      // Extract symptoms from speech
-      const recognizedSymptoms = extractSymptomsFromSpeech(transcript);
+      // Process all results
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
       
-      if (recognizedSymptoms.length > 0) {
-        setSymptoms(recognizedSymptoms.join(', '));
-        alert(`✅ கண்டறியப்பட்ட அறிகுறிகள்: ${recognizedSymptoms.join(', ')}`);
-      } else {
-        alert('❌ எந்த அறிகுறிகளும் கண்டறியப்படவில்லை. தயவுசெய்து தெளிவாக பேசுங்கள் அல்லது வேறு வார்த்தைகளை பயன்படுத்துங்கள்.');
+      const fullTranscript = (finalTranscript || interimTranscript).toLowerCase().trim();
+      console.log('Recognized text:', fullTranscript);
+      console.log('Confidence:', event.results[0][0].confidence);
+      
+      if (fullTranscript) {
+        // Extract symptoms from speech
+        const recognizedSymptoms = extractSymptomsFromSpeech(fullTranscript);
+        
+        if (recognizedSymptoms.length > 0) {
+          setSymptoms(recognizedSymptoms.join(', '));
+          alert(`✅ Recognized symptoms: ${recognizedSymptoms.join(', ')}\n\nThese symptoms have been added to the input field.`);
+        } else {
+          // If no symptoms recognized, add the raw transcript
+          setSymptoms(fullTranscript);
+          alert(`📝 Voice input captured: "${fullTranscript}"\n\nYou can edit this or speak again for better results.`);
+        }
       }
       
       setIsListening(false);
@@ -1316,23 +1336,30 @@ const Home = () => {
     
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
+      console.error('Error details:', event);
       
-      let errorMessage = 'பேச்சு அங்கீகார பிழை: ';
+      let errorMessage = '⚠️ Speech Recognition Error:\n\n';
       switch(event.error) {
         case 'no-speech':
-          errorMessage += 'பேச்சு கண்டறியப்படவில்லை. தயவுசெய்து தெளிவாக பேசுங்கள் மற்றும் மீண்டும் முயற்சிக்கவும்.';
+          errorMessage += 'No speech was detected. Please try again and speak clearly into your microphone.';
           break;
         case 'audio-capture':
-          errorMessage += 'ஒலி பிடிப்பு தோல்வி. தயவுசெய்து உங்கள் மைக்ரோஃபோனை சரிபார்க்கவும்.';
+          errorMessage += 'Microphone error. Please check:\n• Microphone is connected\n• Microphone is not muted\n• Browser has microphone permission';
           break;
         case 'not-allowed':
-          errorMessage += 'மைக்ரோஃபோன் அணுகல் மறுக்கப்பட்டது. தயவுசெய்து மைக்ரோஃபோன் அணுகலை அனுமதிக்கவும்.';
+          errorMessage += 'Microphone access denied. Please:\n1. Click the 🔒 lock icon in address bar\n2. Allow microphone access\n3. Try again';
           break;
         case 'network':
-          errorMessage += 'நெட்வொர்க் பிழை. தயவுசெய்து உங்கள் இணைய இணைப்பை சரிபார்க்கவும்.';
+          errorMessage += 'Network error. Speech recognition requires internet connection. Please check your connection and try again.';
+          break;
+        case 'aborted':
+          errorMessage += 'Speech recognition was aborted. Please try again.';
+          break;
+        case 'service-not-allowed':
+          errorMessage += 'Speech recognition service is not allowed. Please enable it in browser settings.';
           break;
         default:
-          errorMessage += event.error;
+          errorMessage += `Unknown error: ${event.error}\n\nPlease try again or use manual input.`;
       }
       
       alert(errorMessage);
@@ -1364,22 +1391,28 @@ const Home = () => {
     // Map common speech patterns to symptoms (English and Tamil)
     const symptomMappings = {
       'fever': [
-        // English
+        // English - Common patterns
         'fever', 'temperature', 'hot', 'burning up', 'high temperature',
+        'i have fever', 'i have a fever', 'feeling hot', 'body heat', 'feverish',
+        'my temperature is high', 'running a temperature', 'have temperature',
         // Tamil
         'காய்ச்சல்', 'காய்ச்சல் உள்ளது', 'ஜூரம்', 'ஜூரம் உள்ளது', 'காய்ச்சல் வருகிறது',
         'காய்ச்சல் இருக்கிறது', 'காய்ச்சல் வந்திருக்கிறது', 'காய்ச்சல் வருகிறது'
       ],
       'headache': [
-        // English
+        // English - Common patterns
         'headache', 'head pain', 'migraine', 'head hurts', 'pain in head',
+        'i have headache', 'i have a headache', 'my head hurts', 'head is paining',
+        'pain in my head', 'severe headache', 'bad headache', 'splitting headache',
         // Tamil
         'தலைவலி', 'தலைவலி உள்ளது', 'தலைவலி வருகிறது', 'தலைவலி இருக்கிறது',
         'தலைவலி வந்திருக்கிறது', 'தலைவலி வருகிறது', 'தலைவலி உள்ளது'
       ],
       'cough': [
-        // English
+        // English - Common patterns
         'cough', 'coughing', 'dry cough', 'wet cough', 'hacking cough',
+        'i have cough', 'i have a cough', 'i am coughing', 'i keep coughing',
+        'continuous cough', 'persistent cough', 'bad cough', 'severe cough',
         // Tamil
         'இருமல்', 'இருமல் உள்ளது', 'இருமல் வருகிறது', 'இருமல் இருக்கிறது',
         'இருமல் வந்திருக்கிறது', 'இருமல் வருகிறது', 'இருமல் உள்ளது'
@@ -2140,7 +2173,6 @@ const Home = () => {
               <FaUserMd className="text-4xl text-gradient mx-auto mb-3" />
             </motion.div>
             <h2 className="text-3xl font-semibold text-gradient mb-2">Select Symptoms</h2>
-            <p className="text-gray-700 font-normal">Describe your symptoms or use voice recognition</p>
           </div>
 
           <div className="space-y-4">
@@ -2368,12 +2400,7 @@ const Home = () => {
               </motion.div>
             </div>
 
-            <div className="text-center mt-8">
-              <p className="text-sm text-gray-600 font-normal">
-                ⚠️ This is an AI-powered analysis and should not replace professional medical advice. 
-                Please consult with a healthcare provider for proper diagnosis and treatment.
-              </p>
-            </div>
+    
           </motion.div>
         )}
       </div>

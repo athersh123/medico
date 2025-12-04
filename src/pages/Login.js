@@ -28,13 +28,22 @@ const Login = () => {
     setLoading(true);
     setError('');
 
+    console.log('Login: Attempting login with email:', formData.email);
+
     try {
       const result = await login(formData);
+      console.log('Login: Result:', result);
+      
       if (result.success) {
-        navigate('/home');
+        console.log('Login: Success! Redirecting to home...');
+        navigate('/home', { replace: true });
+      } else {
+        console.log('Login: Failed with message:', result.message);
+        setError(result.message || 'Invalid email or password');
       }
     } catch (err) {
-      setError(err.message || 'Invalid email or password');
+      console.error('Login: Exception caught:', err);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -56,9 +65,8 @@ const Login = () => {
     <div className="min-h-screen gradient-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float" style={{animationDelay: '2s'}}></div>
       </div>
       
       <motion.div
@@ -72,7 +80,7 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200, duration: 0.6 }}
-            className="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-glow"
+            className="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-glow"
             whileHover={{ scale: 1.1, rotate: 360 }}
           >
             <FaHeartbeat className="h-12 w-12 text-white animate-pulse-slow" />

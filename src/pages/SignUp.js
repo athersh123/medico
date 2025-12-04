@@ -58,7 +58,8 @@ const SignUp = () => {
 
     setLoading(true);
     setError('');
-    console.log('SignUp: Starting signup process with data:', formData);
+    setSuccess('');
+    console.log('SignUp: Starting signup process with data:', { name: formData.name, email: formData.email });
 
     try {
       // Call the signup function from AuthContext
@@ -71,12 +72,13 @@ const SignUp = () => {
       console.log('SignUp: Signup result:', result);
       
       if (result.success) {
+        console.log('SignUp: Success! User is now logged in, redirecting to home...');
         setSuccess('Account created successfully! Redirecting...');
         
-        // Redirect to home page after 2 seconds
-        setTimeout(() => {
-          navigate('/home');
-        }, 2000);
+        // Redirect immediately - user is already logged in via AuthContext
+        navigate('/home', { replace: true });
+      } else {
+        setError(result.message || 'Failed to create account. Please try again.');
       }
       
     } catch (err) {
@@ -95,9 +97,8 @@ const SignUp = () => {
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-float" style={{animationDelay: '2s'}}></div>
       </div>
       
       <motion.div
@@ -112,7 +113,7 @@ const SignUp = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200, duration: 0.6 }}
-            className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow"
+            className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow"
             whileHover={{ scale: 1.1, rotate: 360 }}
           >
             <span className="text-3xl">🏥</span>

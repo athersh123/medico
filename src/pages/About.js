@@ -7,9 +7,8 @@ const About = () => {
     <div className="min-h-screen gradient-bg relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-300 rounded-full animate-float opacity-30"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 bg-blue-300 rounded-full animate-float opacity-40" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-pink-300 rounded-full animate-float opacity-30" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-200 rounded-full animate-float opacity-30"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-blue-200 rounded-full animate-float opacity-40" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-40 right-1/3 w-12 h-12 bg-green-300 rounded-full animate-float opacity-40" style={{ animationDelay: '0.5s' }}></div>
       </div>
 
@@ -83,7 +82,6 @@ const About = () => {
               Designed with patients in mind, our platform is intuitive and accessible to users of all technical levels.
             </p>
           </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -139,7 +137,7 @@ const About = () => {
           transition={{ duration: 0.6, delay: 0.7 }}
           className="card p-8 shadow-glow"
         >
-          <h2 className="text-3xl font-bold text-gradient text-center mb-6">
+          {/* <h2 className="text-3xl font-bold text-gradient text-center mb-6">
             Our Mission
           </h2>
           <p className="text-lg text-gray-700 font-medium text-center leading-relaxed">
@@ -147,7 +145,7 @@ const About = () => {
             Our mission is to bridge the gap between patients and medical knowledge through innovative 
             AI technology, providing accurate, reliable, and accessible health information that empowers 
             individuals to make informed decisions about their health and well-being.
-          </p>
+          </p> */}
         </motion.div>
       </div>
     </div>
