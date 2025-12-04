@@ -1,15 +1,17 @@
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "server/server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server/server.js"
-    }
-  ]
-}
+services:
+  - type: web
+    name: medicor-backend
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: JWT_SECRET
+        value: medicor-secret-key-2024-production
+      - key: MONGODB_URI
+        value: mongodb://localhost:27017/medicor
+      - key: PORT
+        value: 5000
