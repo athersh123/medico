@@ -46,8 +46,8 @@ const Header = () => {
             </Link>
           </motion.div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* Navigation - Hidden on mobile, shown on desktop */}
+          <nav className="hidden lg:flex items-center space-x-8">
             {navItems.map((item, index) => (
               <motion.div
                 key={item.name}
@@ -82,27 +82,27 @@ const Header = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex items-center space-x-4"
+            className="flex items-center space-x-2 sm:space-x-4"
           >
             {user ? (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg shadow-glow-green"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg shadow-glow-green"
                 >
-                  <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center">
                     <FaUser className="text-white text-xs" />
                   </div>
-                  <span className="text-gray-800 font-semibold text-xs">{user.name}</span>
+                  <span className="text-gray-800 font-semibold text-xs hidden sm:inline">{user.name}</span>
                 </motion.div>
                 <motion.button
                   onClick={logout}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg shadow-glow-red hover:shadow-lg transition-all duration-300"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg shadow-glow-red hover:shadow-lg transition-all duration-300"
                 >
                   <FaSignOutAlt className="text-red-500 text-xs" />
-                  <span className="text-red-600 font-semibold text-xs">Logout</span>
+                  <span className="text-red-600 font-semibold text-xs hidden sm:inline">Logout</span>
                 </motion.button>
               </div>
             ) : (
@@ -120,42 +120,7 @@ const Header = () => {
               </motion.div>
             )}
           </motion.div>
-
-          {/* Mobile Menu Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="md:hidden p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-glow"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </motion.button>
         </div>
-
-        {/* Mobile Navigation - Hidden by default, only shows when mobile menu is toggled */}
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-          className="hidden md:hidden mt-4 pt-4 border-t border-gray-200"
-        >
-          <nav className="flex flex-col space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                  location.pathname === item.path
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-glow'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-        </motion.div>
       </div>
     </motion.header>
   );
