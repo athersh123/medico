@@ -1,12 +1,13 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaHeartbeat, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaHeartbeat, FaUser, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Hide header on login and signup pages
   if (location.pathname === '/login' || location.pathname === '/signup') {
@@ -119,8 +120,53 @@ const Header = () => {
                 </Link>
               </motion.div>
             )}
+
+            {/* Mobile Menu Button */}
+            <motion.button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              whileTap={{ scale: 0.95 }}
+              className="lg:hidden w-10 h-10 flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-glow text-white"
+            >
+              {isMobileMenuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+            </motion.button>
           </motion.div>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="lg:hidden overflow-hidden"
+            >
+              <nav className="py-4 space-y-2">
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <Link
+                      to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`block px-4 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                        location.pathname === item.path
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-glow'
+                          : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </motion.div>
+                ))}
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.header>
   );
